@@ -36,16 +36,19 @@ public class Main {
 
         go.setLocation(56.8400395, 60.601775, 1.0);
 
+        //go.getInventories().getItemBag().removeItem(ItemIdOuterClass.ItemId., 100);
         //Utils.printInventory(go);
-        //go.getInventories().getItemBag().removeItem(ItemIdOuterClass.ItemId.ITEM_POKE_BALL, 150);
 
         System.out.println(go.getPlayerProfile().getStats().getLevel());
         System.out.println(go.getPlayerProfile().getStats().getExperience());
+        System.out.println("Captured pokemons: " + go.getPlayerProfile().getStats().getUniquePokedexEntries());
+        System.out.println("Count pokemons in bag: " + go.getInventories().getPokebank().getPokemons().size());
+        //Utils.removePokemons(go);
         //Utils.printPokemons(go);
 
         Utils.mainLoop(go);
 
-        /*for (int i = 2; i < 15; i++){
+        /*for (int i = 15; i < 16; i++){
             LevelUpRewardsMessageOuterClass.LevelUpRewardsMessage msg = LevelUpRewardsMessageOuterClass.LevelUpRewardsMessage.newBuilder().setLevel(i).build();
             ServerRequest serverRequest = new ServerRequest(RequestTypeOuterClass.RequestType.LEVEL_UP_REWARDS, msg);
             go.getRequestHandler().sendServerRequests(serverRequest);

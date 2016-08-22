@@ -1,4 +1,5 @@
 
+import POGOProtos.Networking.Responses.UseItemEggIncubatorResponseOuterClass;
 import com.pokegoapi.api.PokemonGo;
 import com.pokegoapi.api.inventory.EggIncubator;
 import com.pokegoapi.api.inventory.Inventories;
@@ -45,9 +46,20 @@ public class Utils {
         List<EggIncubator> incubators = go.getInventories().getIncubators();
         for (EggIncubator incubator: incubators){
             if (!incubator.isInUse()){
-                incubator.hatchEgg(go.getInventories().getHatchery().getEggs().stream().findFirst().get());
+                go.getInventories().getHatchery().queryHatchedEggs().stream().forEach(hatchedEgg -> {
+                    System.out.println("Id: " + hatchedEgg.getId());
+                    System.out.println("Candy: " + hatchedEgg.getCandy());
+                    System.out.println("Stardust: " + hatchedEgg.getStardust());
+                    System.out.println("Experience: " + hatchedEgg.getExperience());
+                });
+                System.out.println("Count eggs " + go.getInventories().getHatchery().getEggs().stream().count());
+                System.out.println("asds" + go.getInventories().getHatchery().getEggs().stream().filter(x-> x.isIncubate()).count());
+                UseItemEggIncubatorResponseOuterClass.UseItemEggIncubatorResponse.Result result =
+                        incubator.hatchEgg(go.getInventories().getHatchery().getEggs().stream().filter(x -> !x.isIncubate()).findFirst().get());
+                System.out.println("-------------" +result.name());
                 System.out.println("===NEW=== " + incubator.getKmLeftToWalk());
             }
+
             System.out.println("Left to walk  " + incubator.getKmLeftToWalk());
         }
     }
@@ -70,12 +82,15 @@ public class Utils {
 
     public static void mainLoop(PokemonGo go) throws LoginFailedException, RemoteServerException, NoSuchItemException, InterruptedException, EncounterFailedException {
 
+        int count = 0;
         Runnable thread = () -> {
-            try {
-                Utils.egg(go);
-                Thread.sleep(60000);
-            } catch (Exception e) {
-                e.printStackTrace();
+            while (true) {
+                try {
+                    Utils.egg(go);
+                    Thread.sleep(60000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         };
         Thread th = new Thread(thread);
@@ -100,8 +115,9 @@ public class Utils {
                 EncounterResult encResult = cp.encounterPokemon();
                 if (encResult.wasSuccessful()) {
                     System.out.println("Encounted:" + cp.getPokemonId());
-                    CatchResult result = cp.catchPokemonWithRazzBerry(Pokeball.GREATBALL);
+                    CatchResult result = cp.catchPokemonWithRazzBerry();
                     System.out.println("Attempt to catch:" + cp.getPokemonId() + " " + result.getStatus() + " " + encResult.getPokemonData().getCp());
+                    System.out.println("Catched in this session: " + ++count);
                 }
             }
 
@@ -130,5 +146,17 @@ public class Utils {
             go.setLongitude(newLongitude);
             sleep(2000);
         }
+    }
+
+    public static void removePokemons(PokemonGo go) throws LoginFailedException, RemoteServerException {
+        go.getInventories().getPokebank().getPokemons().stream().filter(x -> x.getIvRatio() < 0.85).forEach(x -> {
+            try {
+                x.transferPokemon();
+            } catch (LoginFailedException e) {
+                e.printStackTrace();
+            } catch (RemoteServerException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
