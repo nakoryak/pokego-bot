@@ -34,21 +34,25 @@ public class Main {
         PokemonLogin login = new PokemonLogin();
         PokemonGo go = login.pokemonGo();
 
-        go.setLocation(56.8400395, 60.601775, 1.0);
+        go.setLocation(40.7696354, -73.9746745, 1.0);
 
-        //go.getInventories().getItemBag().removeItem(ItemIdOuterClass.ItemId., 100);
-        //Utils.printInventory(go);
+        //go.getInventories().getItemBag().removeItem(ItemIdOuterClass.ItemId.ITEM_POKE_BALL, 200);
+        Utils.printInventory(go);
 
         System.out.println(go.getPlayerProfile().getStats().getLevel());
         System.out.println(go.getPlayerProfile().getStats().getExperience());
         System.out.println("Captured pokemons: " + go.getPlayerProfile().getStats().getUniquePokedexEntries());
         System.out.println("Count pokemons in bag: " + go.getInventories().getPokebank().getPokemons().size());
         //Utils.removePokemons(go);
+        //Utils.evolveAll(go);
         //Utils.printPokemons(go);
+        //Utils.printAllCandies(go);
+
+        //go.getInventories().getItemBag().useIncense();
 
         Utils.mainLoop(go);
 
-        /*for (int i = 15; i < 16; i++){
+        /*for (int i = 20; i < 22; i++){
             LevelUpRewardsMessageOuterClass.LevelUpRewardsMessage msg = LevelUpRewardsMessageOuterClass.LevelUpRewardsMessage.newBuilder().setLevel(i).build();
             ServerRequest serverRequest = new ServerRequest(RequestTypeOuterClass.RequestType.LEVEL_UP_REWARDS, msg);
             go.getRequestHandler().sendServerRequests(serverRequest);
@@ -58,9 +62,11 @@ public class Main {
             LevelUpRewardsResponseOuterClass.LevelUpRewardsResponse response = null;
             try {
                 response = LevelUpRewardsResponseOuterClass.LevelUpRewardsResponse.parseFrom(serverRequest.getData());
+                System.out.println("======" + i + "======");
                 response.getItemsAwardedList().stream().forEach( x -> {
                     System.out.println(x.getItemId().name() + " " + x.getItemCount());
                 });
+
             } catch (InvalidProtocolBufferException e) {
                 // its possible that the parsing fail when servers are in high load for example.
                 throw new RemoteServerException(e);

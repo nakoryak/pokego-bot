@@ -1,4 +1,5 @@
 
+import POGOProtos.Enums.PokemonFamilyIdOuterClass;
 import POGOProtos.Networking.Responses.UseItemEggIncubatorResponseOuterClass;
 import com.pokegoapi.api.PokemonGo;
 import com.pokegoapi.api.inventory.EggIncubator;
@@ -9,6 +10,7 @@ import com.pokegoapi.api.map.fort.Pokestop;
 import com.pokegoapi.api.map.fort.PokestopLootResult;
 import com.pokegoapi.api.map.pokemon.CatchResult;
 import com.pokegoapi.api.map.pokemon.CatchablePokemon;
+import com.pokegoapi.api.map.pokemon.EvolutionResult;
 import com.pokegoapi.api.map.pokemon.NearbyPokemon;
 import com.pokegoapi.api.map.pokemon.encounter.EncounterResult;
 import com.pokegoapi.exceptions.EncounterFailedException;
@@ -31,6 +33,13 @@ public class Utils {
 
     private static long countPokestops(Collection<Pokestop> pokestops){
         return pokestops.stream().count();
+    }
+
+    public static void printAllCandies(PokemonGo go) throws LoginFailedException, RemoteServerException {
+        PokemonFamilyIdOuterClass.PokemonFamilyId[] familyId = PokemonFamilyIdOuterClass.PokemonFamilyId.values();
+        for (PokemonFamilyIdOuterClass.PokemonFamilyId id: familyId) {
+            System.out.println(id.name() + " " + go.getInventories().getCandyjar().getCandies(id));
+        }
     }
 
     public static void printPokemons(PokemonGo go) throws LoginFailedException, RemoteServerException {
@@ -71,9 +80,11 @@ public class Utils {
         }
     }
 
-    public static void soldPokemonIfBetterExist(CatchablePokemon catchablePokemon, PokemonGo go) throws LoginFailedException, RemoteServerException {
+    public static void soldPokemonIfBetterExist(CatchablePokemon cp, PokemonGo go) throws LoginFailedException, RemoteServerException {
+
         go.getInventories().getPokebank().getPokemons().stream()
-                .filter(x -> x.getPokemonId().equals(catchablePokemon.getPokemonId()))
+                .filter(x -> x.getPokemonId().equals(cp.getPokemonId()))
+        //        .filter()
                 .forEach(pok -> {
                     //if (pok.getCp() > c)
                 });
@@ -104,7 +115,7 @@ public class Utils {
             for (Pokestop pokestop : go.getMap().getMapObjects().getPokestops()) {
                 if (pokestop.inRange() && pokestop.canLoot()) {
                     PokestopLootResult result = pokestop.loot();
-                    result.getItemsAwarded().stream().forEach(x -> System.out.println(x.getItemId().name()));
+                    result.getItemsAwarded().forEach(x -> System.out.println(x.getItemId().name()));
                 }
             }
 
@@ -115,48 +126,80 @@ public class Utils {
                 EncounterResult encResult = cp.encounterPokemon();
                 if (encResult.wasSuccessful()) {
                     System.out.println("Encounted:" + cp.getPokemonId());
-                    CatchResult result = cp.catchPokemonWithRazzBerry();
+                    CatchResult result = cp.catchPokemonBestBallToUse();
                     System.out.println("Attempt to catch:" + cp.getPokemonId() + " " + result.getStatus() + " " + encResult.getPokemonData().getCp());
+                    /*if (!result.isFailed()) {
+                        go.getInventories().getPokebank().getPokemons().stream()
+                                .filter(x -> x.getCp() < 1000)
+                                .filter(x -> x.getIvRatio() < 0.85)
+                                .filter(x -> x.getPokemonId().equals(cp.getPokemonId()))
+                                .forEach(x -> {
+                                    if (x.getCp() < encResult.getPokemonData().getCp()) {
+                                        try {
+                                            System.out.println("Transferred: " + x.getPokemonId().name() + " " + x.getCp());
+                                            x.transferPokemon();
+                                        } catch (Exception e) {
+
+                                        }
+                                    }
+                                });
+                    }*/
                     System.out.println("Catched in this session: " + ++count);
                 }
             }
 
-            Random random = new Random();
+                Random random = new Random();
 
-            //Double newLatitude = go.getLatitude() + random.nextDouble() * 0.0001;
-            //Double newLongitude = go.getLongitude() + random.nextDouble() * 0.0001;
+                //Double newLatitude = go.getLatitude() + random.nextDouble() * 0.0001;
+                //Double newLongitude = go.getLongitude() + random.nextDouble() * 0.0001;
 
-            Double newLatitude;
-            Double newLongitude;
+                Double newLatitude;
+                Double newLongitude;
 
-            Collection<Pokestop> pokestops = go.getMap().getMapObjects(30).getPokestops();
-            System.out.println("Nearby pokestops: " + countPokestops(pokestops) + " can loot: " + pokestops.stream().filter(x -> x.canLoot()).count());
-            try {
-                System.out.println(findNearestPokeStop(pokestops).getDetails().getDescription());
-                newLatitude = findNearestPokeStop(pokestops).getLatitude();
-                newLongitude = findNearestPokeStop(pokestops).getLongitude();
-            } catch (Exception e){
-                newLatitude = go.getLatitude() + random.nextGaussian() * 0.0005;
-                newLongitude = go.getLongitude() + random.nextGaussian() * 0.0005;
-            }
-            System.out.println(newLatitude);
-            System.out.println(newLongitude);
+                Collection<Pokestop> pokestops = go.getMap().getMapObjects(30).getPokestops();
+                System.out.println("Nearby pokestops: " + countPokestops(pokestops) + " can loot: " + pokestops.stream().filter(x -> x.canLoot()).count());
+                try {
+                    System.out.println(findNearestPokeStop(pokestops).getDetails().getDescription());
+                    newLatitude = findNearestPokeStop(pokestops).getLatitude();
+                    newLongitude = findNearestPokeStop(pokestops).getLongitude();
+                } catch (Exception e) {
+                    newLatitude = go.getLatitude() + random.nextGaussian() * 0.0005;
+                    newLongitude = go.getLongitude() + random.nextGaussian() * 0.0005;
+                }
+                System.out.println(newLatitude);
+                System.out.println(newLongitude);
 
-            go.setLatitude(newLatitude);
-            go.setLongitude(newLongitude);
-            sleep(2000);
+                go.setLatitude(newLatitude);
+                go.setLongitude(newLongitude);
+                sleep(2000);
         }
     }
 
     public static void removePokemons(PokemonGo go) throws LoginFailedException, RemoteServerException {
-        go.getInventories().getPokebank().getPokemons().stream().filter(x -> x.getIvRatio() < 0.85).forEach(x -> {
+        go.getInventories().getPokebank().getPokemons().stream().filter(x -> x.getIvRatio() < 0.85)
+                .filter(x -> x.getCp() < 800).forEach(x -> {
             try {
+                System.out.println("Transferring: " + x.getPokemonId().name() + " " + x.getCp());
                 x.transferPokemon();
-            } catch (LoginFailedException e) {
-                e.printStackTrace();
-            } catch (RemoteServerException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
+    }
+
+    public static void evolveAll(PokemonGo go) throws LoginFailedException, RemoteServerException {
+        go.getInventories().getPokebank().getPokemons().stream()
+                .filter(x -> x.getEvolutionForm().getEvolutionStage() == 1)
+                .forEach(x -> {
+                    System.out.println("Trying  to evolve");
+                    try {
+                        EvolutionResult result = x.evolve();
+                        if (result.isSuccessful()) {
+                            System.out.println("Evolved: " +result.getEvolvedPokemon().getPokemonId().name() + " " + result.getEvolvedPokemon().getCp());
+                        }
+                    } catch (Exception e) {
+                        System.out.println(x.getPokemonId().name() + " cannot be evolved");
+                    }
+                });
     }
 }
